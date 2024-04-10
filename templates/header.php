@@ -2,8 +2,12 @@
 require_once 'lib/config.php';
 require_once 'lib/pdo.php';
 
-?>
 
+$mainMenu = [
+    'index.php' => 'Accueil',
+    'sondages.php' => 'Les sondages',
+    ];
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -14,7 +18,17 @@ require_once 'lib/pdo.php';
     integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
     crossorigin="anonymous">
     <link rel="stylesheet" href="./assets/css/override-bootstrap.css">
-    <title>Document</title>
+    <title>
+        <?php 
+            if (isset ($mainMenu [basename($_SERVER['SCRIPT_NAME'])])) {
+                echo $mainMenu[basename($_SERVER['SCRIPT_NAME'])].' - '.SITE_NAME;
+            } else if (isset ($pageTitle)){
+                echo $pageTitle.' - '.SITE_NAME;
+            } else {
+                echo SITE_NAME;
+            }
+        ?>
+    </title>
 </head>
 <body>
     
@@ -27,13 +41,19 @@ require_once 'lib/pdo.php';
             </a>
         </div>
 
-    <ul class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0">
-        <li><a href="#" class="nav-link px-2 link-secondary">Home</a></li>
-        <li><a href="#" class="nav-link px-2">Features</a></li>
-        <li><a href="#" class="nav-link px-2">Pricing</a></li>
-        <li><a href="#" class="nav-link px-2">FAQs</a></li>
-        <li><a href="#" class="nav-link px-2">About</a></li>
-    </ul>
+        <ul class="nav nav-pills">
+            <?php foreach ($mainMenu as $page => $titre) { ?>
+                <li class="nav-item">
+                    <a href="<?= $page; ?>" class="nav-link <?php
+                        if (basename($_SERVER['SCRIPT_NAME']) === $page) {
+                            echo 'active';
+                        }
+                        ?>"><?= $titre; ?>
+                    </a>
+                </li>
+            <?php } ?>          
+        </ul>
+
 
     <div class="col-md-3 text-end">
         <button type="button" class="btn btn-outline-primary me-2">Login</button>

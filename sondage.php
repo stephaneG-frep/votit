@@ -1,26 +1,23 @@
 <?php 
-require_once 'templates/header.php';
+require_once 'lib/required_files.php';
 require_once 'lib/poll.php';
 
 $error404 = false;
-
 
 if (isset($_GET['id'])) {
     $id = (int)$_GET['id'];
     $poll = getPollById($pdo, $id);
 
     if ($poll) {
-
-        $results = getPollResultsByPollId($pdo, $id);
-        var_dump($results);
-
+        $pageTitle = $poll['title'];
+        $results = getPollResultsByPollId($pdo, $id);       
     } else {
         $error404 = true;
     }
-
 } else {
     $error404 = true;
 }
+require_once 'templates/header.php';
 
 if (!$error404) {
 ?>
@@ -33,22 +30,16 @@ if (!$error404) {
     <div class="col-10 col-sm-8 col-lg-6">
         <h2>Résultats</h2>
         <div class="results">
-            <h3>Prop 1</h3>
+            <?php foreach ($results as $index => $result) { ?>
+                <h3><?= $result['name'] ?></h3>
             <div class="progress">
-                <div class="progress-bar progress-bar-striped progress-color-2"
+                <div class="progress-bar progress-bar-striped progress-color-<?=$index?>"
                 role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" 
-                aria-valuemax="100">25% - prop 1
+                aria-valuemax="100"><?= $result['name'] ?> 25% 
                 </div>
             </div>
-
-            <h3>Prop 2</h3>
-            <div class="progress">
-                <div class="progress-bar progress-bar-striped progress-color-3"
-                role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" 
-                aria-valuemax="100">25% - prop 2
-                </div>
-            </div>
-
+            <?php } ?>
+            
         </div>
     </div>
 </div>
