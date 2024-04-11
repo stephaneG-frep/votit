@@ -10,8 +10,14 @@ if (isset($_GET['id'])) {
 
     if ($poll) {
         $pageTitle = $poll['title'];
+        if (isset($_SESSION['user']) && isset($_POST['voteSubmit'])) {
+            removeVotesByPollIdAndUserId($pdo, $id, (int)$_SESSION['user']['id']);
+            $res = addVote($pdo, (int)$_SESSION['user']['id'], $_POST['items']);
+
+        }
         $results = getPollResultsByPollId($pdo, $id);
         $totalUsers = getPollTotalUsersByPollId($pdo, $id);
+        $items = getPollItems($pdo, $id);
     } else {
         $error404 = true;
     }
@@ -48,6 +54,29 @@ if (!$error404) {
             </div>
             <?php } ?>
             
+        </div>
+        <div class="mt-5">
+            <?php if (isset($_SESSION['user'])) { ?>
+                <div>
+                    <form method="post">
+                        <h2>Votez pour ce sondage</h2>
+                        <h3><?= $poll['title']; ?></h3>
+                        <div class="btn-group" role="group" aria-label="Basic checkbox toggle button group">
+                        <?php foreach ($items as $_GETkey => $item) { ?>
+                                <input type="checkbox" class="btn-check" id="btncheck<?=$item['id']?>" autocomplete="off" value="<?=$item['id']?>" name="items[]">
+                                <label class="btn btn-outline-primary" for="btncheck<?=$item['id']?>"><?=$item['name']?></label>
+                        <?php } ?>
+                        </div>
+                        <div class="mt-2">
+                            <input type="submit"  name="voteSubmit" class="btn btn-primary" value="Voter">
+                        </div>
+                    </form>
+                </div>
+            <?php } else { ?>
+                <div class="alert alert-warning">
+                    <p>Vous devez être connecté pour voter</p>
+                </div>
+            <?php } ?>
         </div>
     </div>
 </div>
