@@ -10,7 +10,8 @@ if (isset($_GET['id'])) {
 
     if ($poll) {
         $pageTitle = $poll['title'];
-        $results = getPollResultsByPollId($pdo, $id);       
+        $results = getPollResultsByPollId($pdo, $id);
+        $totalUsers = getPollTotalUsersByPollId($pdo, $id);
     } else {
         $error404 = true;
     }
@@ -30,12 +31,19 @@ if (!$error404) {
     <div class="col-10 col-sm-8 col-lg-6">
         <h2>Résultats</h2>
         <div class="results">
-            <?php foreach ($results as $index => $result) { ?>
+            <?php foreach ($results as $index => $result) { 
+                
+                if ($totalUsers) {
+                    $resultPercent = $result['votes'] / $totalUsers * 100;
+                } else {
+                    $resultPercent = 0;
+                }
+                
+                
+            ?>
                 <h3><?= $result['name'] ?></h3>
-            <div class="progress">
-                <div class="progress-bar progress-bar-striped progress-color-<?=$index?>"
-                role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" 
-                aria-valuemax="100"><?= $result['name'] ?> 25% 
+            <div class="progress" role="progressbar" arial-label="Example with label" aria-valuenow="<?=$resultPercent;?>%"  aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar progress-bar-striped progress-color-<?=$index?>" style="width: <?= $resultPercent;?>%"><?= $result['name'] ?> <?=round($resultPercent,2);?>%
                 </div>
             </div>
             <?php } ?>

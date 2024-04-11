@@ -31,10 +31,25 @@ function getPollResultsByPollId(PDO $pdo, int $id): array
     $query = $pdo->prepare("SELECT pi.id, pi.name, COUNT(upi.poll_item_id) as votes
                             FROM poll_item pi
                             LEFT JOIN user_poll_item upi ON upi.poll_item_id = pi.id
-                            WHERE poll_id = :id
+                            WHERE pi.poll_id = :id
                             GROUP BY pi.id
                             ORDER BY votes DESC");
     $query->bindValue(':id', $id, PDO::PARAM_INT);
     $query->execute();
     return $query->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getPollTotalUsersByPollId(PDO $pdo, int $id): int
+{
+    $query = $pdo->prepare("SELECT COUNT(DISTINCT upi.user_id) as total_users FROM poll_item pi
+                            LEFT JOIN user_poll_item upi ON upi.poll_item_id = pi.id
+                            WHERE pi.poll_id = :id");
+    $query->bindValue(':id', $id, PDO::PARAM_INT);
+    $query->execute();
+    $res =  $query->fetch(PDO::FETCH_ASSOC);
+    if ($res) {
+        return (int)$res['total_users'];
+    } else {
+        return 0;
+    }
 }
