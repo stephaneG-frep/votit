@@ -4,6 +4,9 @@ require_once 'lib/poll.php';
 
 $error404 = false;
 
+$messages = [];
+$errors = [];
+
 if (isset($_GET['id'])) {
     $id = (int)$_GET['id'];
     $poll = getPollById($pdo, $id);
@@ -11,9 +14,17 @@ if (isset($_GET['id'])) {
     if ($poll) {
         $pageTitle = $poll['title'];
         if (isset($_SESSION['user']) && isset($_POST['voteSubmit'])) {
-            removeVotesByPollIdAndUserId($pdo, $id, (int)$_SESSION['user']['id']);
-            $res = addVote($pdo, (int)$_SESSION['user']['id'], $_POST['items']);
-
+            if (empty($_POST['items'])) {
+                $errors[] = 'Vous devez sélectionner au moins une réponse';
+            } else {
+                removeVotesByPollIdAndUserId($pdo, $id, (int)$_SESSION['user']['id']);
+                $resAddVote = addVote($pdo, (int)$_SESSION['user']['id'], $_POST['items']);
+                if ($resAddVote) {
+                    $messages[] = 'Votre vote a bien été pris en compte';
+                } else {
+                    $errors[] = 'Une erreur est survenue lors de l\'enregistrement de votre vote';           
+                }
+            }
         }
         $results = getPollResultsByPollId($pdo, $id);
         $totalUsers = getPollTotalUsersByPollId($pdo, $id);
@@ -48,7 +59,7 @@ if (!$error404) {
                 
             ?>
                 <h3><?= $result['name'] ?></h3>
-            <div class="progress" role="progressbar" arial-label="Example with label" aria-valuenow="<?=$resultPercent;?>%"  aria-valuemin="0" aria-valuemax="100">
+            <div class="progress" role="progressbar" arial-label="<?= $result['name']?>" aria-valuenow="<?=$resultPercent;?>%"  aria-valuemin="0" aria-valuemax="100">
                 <div class="progress-bar progress-bar-striped progress-color-<?=$index?>" style="width: <?= $resultPercent;?>%"><?= $result['name'] ?> <?=round($resultPercent,2);?>%
                 </div>
             </div>
@@ -59,14 +70,29 @@ if (!$error404) {
             <?php if (isset($_SESSION['user'])) { ?>
                 <div>
                     <form method="post">
-                        <h2>Votez pour ce sondage</h2>
+                        <h2>Votez pour ce sondage : </h2>
                         <h3><?= $poll['title']; ?></h3>
                         <div class="btn-group" role="group" aria-label="Basic checkbox toggle button group">
-                        <?php foreach ($items as $_GETkey => $item) { ?>
+                        <?php foreach ($items as $key => $item) { ?>
                                 <input type="checkbox" class="btn-check" id="btncheck<?=$item['id']?>" autocomplete="off" value="<?=$item['id']?>" name="items[]">
                                 <label class="btn btn-outline-primary" for="btncheck<?=$item['id']?>"><?=$item['name']?></label>
                         <?php } ?>
                         </div>
+                        <?php if ($messages) { ?>
+                            <?php foreach ($messages as  $message) { ?>
+                                <div class="alert alert-success mt-4" role="alert">
+                                    <?=$message?>
+                                </div>
+                            <?php } ?>
+                        <?php } ?>
+
+                        <?php if ($errors) { ?>
+                            <?php foreach ($errors as  $error) { ?>
+                                <div class="alert alert-danger mt-4" role="alert">
+                                    <?=$error?>
+                                </div>
+                            <?php } ?>
+                        <?php } ?>
                         <div class="mt-2">
                             <input type="submit"  name="voteSubmit" class="btn btn-primary" value="Voter">
                         </div>
@@ -74,7 +100,7 @@ if (!$error404) {
                 </div>
             <?php } else { ?>
                 <div class="alert alert-warning">
-                    <p>Vous devez être connecté pour voter</p>
+                    Vous devez être connecté pour voter
                 </div>
             <?php } ?>
         </div>

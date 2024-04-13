@@ -72,7 +72,7 @@ function addVote(PDO $pdo, int $user_id, array $items)
     $res = true;
     foreach ($items as $key => $itemId) {
         $query->bindValue(':poll_item_id', (int)$itemId, PDO::PARAM_INT);
-        if ($query->execute()) {
+        if (!$query->execute()) {
             $res = false;
         }
     }
@@ -90,6 +90,51 @@ function removeVotesByPollIdAndUserId(PDO $pdo, int $poll_id, int $user_id)
     $query->bindValue(':poll_id', $poll_id, PDO::PARAM_INT);
     return $query->execute();
 }
-{
 
+function savePoll(PDO $pdo, string $title, string $description,
+                    int $category_id, int $user_id):bool|int
+{
+    $query = $pdo->prepare("INSERT INTO poll(title, description, category_id, user_id)
+                            VALUES (:title, :description, :category_id, :user_id)");
+    $query->bindValue(':title', $title, PDO::PARAM_STR);
+    $query->bindValue(':description', $description, PDO::PARAM_STR);
+    $query->bindValue(':category_id', $category_id, PDO::PARAM_INT);
+    $query->bindValue(':user_id', $user_id, PDO::PARAM_INT);
+
+    if ($query->execute()) {
+        return $pdo->lastInsertId();
+    } else {
+        return false;
+    }
+    //return $query->execute();
+}
+
+function savePollItem(PDO $pdo, int $poll_id, string $name, int $id = null ):bool
+{
+    if ($id) {
+        $query = $pdo->prepare("UPDATE poll_item SET poll_id = :poll_id, name = :name
+                                WHERE id = :id");
+        $query->bindValue(':id', $id);
+    } else {
+        $query = $pdo->prepare("INSERT INTO poll_item (poll_id, name) VALUES (:poll_id, :name)");
+    }
+    $query->bindValue(':poll_id', $poll_id);
+    $query->bindValue(':name', $name);
+    return $query->execute();
+}
+
+function getPollItemById(PDO $pdo, int $item_id):array
+{
+    $query = $pdo->prepare("SELECT * FROM poll_item WHERE id = :item_id");
+    $query->bindValue(':item_id', $item_id,PDO::PARAM_INT);
+    $query->execute();
+    return $query->fetch(PDO::FETCH_ASSOC);
+}
+
+function deletePollItemById(PDO $pdo, int $item_id):bool
+{
+    $query = $pdo->prepare("DELETE FROM poll_item 
+                            WHERE id = :item_id");
+    $query->bindParam(':item_id', $item_id);
+    return $query->execute();                      
 }
